@@ -1,19 +1,14 @@
 const {Wallet, ethers} = require ('ethers')
 const {FlashbotsBundleProvider, FlashbotsBundleResolution}= require('@flashbots/ethers-provider-bundle')
 const { UniswapAbi, UniswapBytecode, UniswapFactoryAbi, UniswapFactoryBytecode, pairAbi, pairBytecode, erc20Abi, erc20Bytecode, Uniswapv3Abi } = require ('./abi.js')
-//const{ wethAddress,uniswapAddress,uniswapFactoryAddress,uinversalRouteraddress } = require('./addresses')
 const {dotenv}= require('dotenv')
 const { SigningKey } = require('ethers/lib/utils.js')
-// dotenv.config()
 require('dotenv').config();
-//0x88044889B940858aa2929E79e71355e379A450C9
 
 const wethAddress = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6'
 const uniswapAddress = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
 const uniswapFactoryAddress= '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
 const uinversalRouteraddress = '0x4648a43B2C14Da09FdF82B161150d3F634f40491'
-
-
   
 const flashbotUrl = 'https://relay-goerli.flashbots.net'
 const httpProviderUrl = process.env.httpsProviderUrl
@@ -35,12 +30,19 @@ const buyAmount = ethers.utils.parseEther('0.1','ether')
 const chainId = 5
 let flashbotsProvider = null
 
+// 1. Create the start function to listen to tx
 
+const start = async ()=>{
+    flashbotsProvider = await FlashbotsBundleProvider.create(provider, signinWallet, flashbotUrl)
+    console.log('Listening on tx for the chain id', chainId)
+    wsProvider.on('pending',tx=>{
+        console.log('tx',tx)
+        processTransaction(tx)
+    })
+    
+}
 
-
-// Create the start function to listen to tx
-
-// 2.5 Decode uniswap Universal Router transaction
+// 2. Decode uniswap Universal Router transaction
 const decodeUniversalRouterSwap = input=>{
     const abiCoder = new ethers.utils.AbiCoder()
     const decodedParameters = abiCoder.decode(['address','uint256','uint256','bytes','bool'], input)
@@ -312,16 +314,6 @@ const processTransaction = async tx=>{
     })
 
 }   
-
-const start = async ()=>{
-    flashbotsProvider = await FlashbotsBundleProvider.create(provider, signinWallet, flashbotUrl)
-    console.log('Listening on tx for the chain id', chainId)
-    wsProvider.on('pending',tx=>{
-        console.log('tx',tx)
-        processTransaction(tx)
-    })
-    
-}
 
 start()
 
